@@ -15,7 +15,7 @@ $(document).ready(function() {
 		that.joinChat = function() {
 			if (that.userName().trim() != '') {
 				keepPolling = true;
-				pollForMessages();
+                that.activePollingXhr(true);
 			}
 		}
 
@@ -73,7 +73,7 @@ $(document).ready(function() {
 
 	//Activate knockout.js
 	ko.applyBindings(new ChatViewModel());
-	
+
 });
 
 
