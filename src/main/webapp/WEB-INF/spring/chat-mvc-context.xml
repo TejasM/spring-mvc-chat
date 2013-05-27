@@ -14,18 +14,13 @@
         </mvc:message-converters>
     </mvc:annotation-driven>
 
-    <mvc:default-servlet-handler />
+    <context:component-scan base-package="org.springframework.samples.async.data"/>
+
+    <mvc:default-servlet-handler/>
 
     <mvc:view-controller path="/" view-name="chat"/>
 
     <mvc:resources mapping="/resources/**" location="resources/"/>
-
-    <bean id="templateResolver" class="org.thymeleaf.templateresolver.ServletContextTemplateResolver">
-        <property name="prefix" value="/WEB-INF/templates/"/>
-        <property name="suffix" value=".html"/>
-        <property name="templateMode" value="HTML5"/>
-        <property name="cacheable" value="false"/>
-    </bean>
 
     <bean id="templateEngine" class="org.thymeleaf.spring3.SpringTemplateEngine">
         <property name="templateResolver" ref="templateResolver"/>
@@ -35,6 +30,30 @@
         <property name="templateEngine" ref="templateEngine"/>
     </bean>
 
-    <context:component-scan base-package="org.springframework.samples.async.chat"/>
-    <bean class="org.springframework.samples.async.server.SampleVerticle" init-method="setup"/>
+    <beans profile="blocking">
+
+        <context:component-scan base-package="org.springframework.samples.async.chat"/>
+
+        <bean id="templateResolver" class="org.thymeleaf.templateresolver.ServletContextTemplateResolver">
+            <property name="prefix" value="/WEB-INF/templates/"/>
+            <property name="suffix" value=".html"/>
+            <property name="templateMode" value="HTML5"/>
+            <property name="cacheable" value="false"/>
+        </bean>
+
+    </beans>
+
+    <beans profile="vertx">
+        <bean class="org.springframework.samples.async.server.SampleVerticle" init-method="setup" destroy-method="onDestroy"/>
+
+        <context:component-scan base-package="org.springframework.samples.async.nonblocking.chat"/>
+
+        <bean id="templateResolver" class="org.thymeleaf.templateresolver.ServletContextTemplateResolver">
+            <property name="prefix" value="/WEB-INF/templates/nonblocking/"/>
+            <property name="suffix" value=".html"/>
+            <property name="templateMode" value="HTML5"/>
+            <property name="cacheable" value="false"/>
+        </bean>
+
+    </beans>
 </beans>

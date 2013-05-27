@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Chat</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link type="text/css" href=""/>
+</head>
+<body>
+<h1>Chat</h1>
+
+<form id="joinChatForm" th:action="@{/mvc/chat}" data-bind="visible: chatting() == null">
+    <p>
+        <label for="user">User: </label>
+        <input id="user" name="user" type="text" data-bind="value: userName"/>
+        <input name="messageIndex" type="hidden" data-bind="value: messageIndex"/>
+        <button id="start" type="submit" data-bind="click: joinChat">Join Chat</button>
+    </p>
+</form>
+
+<form id="leaveChatForm" th:action="@{/mvc/chat}" data-bind="visible: chatting() != null">
+    <p>
+        You're chatting as <strong data-bind="text: userName"></strong>
+        <button id="leave" type="submit" data-bind="click: leaveChat">Leave Chat</button>
+    </p>
+</form>
+
+<div data-bind="visible: chatting() != null">
+    <textarea id="chatContent" rows="15" cols="60" readonly="readonly" data-bind="text: chatContent"></textarea>
+</div>
+
+<form id="postMessageForm" th:action="@{/mvc/chat}" data-bind="visible: chatting() != null">
+    <p>
+        <input id="message" name="message" type="text" data-bind="value: message"/>
+        <button id="post" type="submit" data-bind="click: postMessage">Post</button>
+    </p>
+</form>
+</body>
+<script type="text/javascript" src="../../../resources/js/jquery-1.7.2.min.js"
+        th:src="@{/resources/js/jquery-1.7.2.min.js}"></script>
+<script type="text/javascript" src="../../../resources/js/knockout-2.0.0.js"
+        th:src="@{/resources/js/knockout-2.0.0.js}"></script>
+<script type="text/javascript" src="http://cdn.sockjs.org/sockjs-0.2.1.min.js"></script>
+<script type="text/javascript" src="../../../resources/js/nonblocking/vertxbus.js"
+        th:src="@{/resources/js/nonblocking/vertxbus.js}"></script>
+<script type="text/javascript" src="../../../resources/js/nonblocking/chat.js" th:src="@{/resources/js/nonblocking/chat.js}"></script>
+<script>
+    $(function() {
+        var eb = new vertx.EventBus("http://localhost:3000/eventbus");
+
+        function browserHandler(msg) {
+            $('#chatContent').append(msg["message"] + "\n");
+        }
+
+        eb.onopen = function() {
+            eb.registerHandler('test.app', browserHandler);
+        }
+    });
+</script>
+
+</html>

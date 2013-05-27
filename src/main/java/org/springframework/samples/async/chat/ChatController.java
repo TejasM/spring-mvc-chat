@@ -7,74 +7,66 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.samples.async.server.SampleVerticle;
+import org.springframework.context.annotation.Profile;
+import org.springframework.samples.async.data.ChatRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.async.DeferredResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.sockjs.SockJSServer;
-import org.vertx.java.core.sockjs.SockJSSocket;
 
 @Controller
+@Profile("blocking")
 @RequestMapping("/mvc/chat")
 public class ChatController {
 
-	private final ChatRepository chatRepository;
+    private final ChatRepository chatRepository;
 
-	private final Map<DeferredResult<List<String>>, Integer> chatRequests =
-			new ConcurrentHashMap<DeferredResult<List<String>>, Integer>();
+    private final Map<DeferredResult<List<String>>, Integer> chatRequests =
+            new ConcurrentHashMap<DeferredResult<List<String>>, Integer>();
+
 
     @Autowired
-    private SampleVerticle verticle;
+    public ChatController(ChatRepository chatRepository) {
+        this.chatRepository = chatRepository;
+    }
 
-	@Autowired
-	public ChatController(ChatRepository chatRepository) {
-		this.chatRepository = chatRepository;
-	}
+    @RequestMapping(method=RequestMethod.GET)
+    @ResponseBody
+    public DeferredResult<List<String>> getMessages(@RequestParam int messageIndex) {
 
-	@RequestMapping(method=RequestMethod.GET)
-	@ResponseBody
-	public DeferredResult<List<String>> getMessages(@RequestParam int messageIndex) {
+        final DeferredResult<List<String>> deferredResult = new DeferredResult<List<String>>(null, Collections.emptyList());
+        this.chatRequests.put(deferredResult, messageIndex);
 
-		final DeferredResult<List<String>> deferredResult = new DeferredResult<List<String>>(null, Collections.emptyList());
-		this.chatRequests.put(deferredResult, messageIndex);
+        deferredResult.onCompletion(new Runnable() {
+            @Override
+            public void run() {
+                chatRequests.remove(deferredResult);
+            }
+        });
 
-		deferredResult.onCompletion(new Runnable() {
-			@Override
-			public void run() {
-				chatRequests.remove(deferredResult);
-			}
-		});
+        List<String> messages = this.chatRepository.getMessages(messageIndex);
+        if (!messages.isEmpty()) {
+            deferredResult.setResult(messages);
+        }
 
-		List<String> messages = this.chatRepository.getMessages(messageIndex);
-		if (!messages.isEmpty()) {
-			deferredResult.setResult(messages);
-		}
+        return deferredResult;
+    }
 
-		return deferredResult;
-	}
+    @RequestMapping(method=RequestMethod.POST)
+    @ResponseBody
+    public void postMessage(@RequestParam String message) {
 
+        this.chatRepository.addMessage(message);
 
-	@RequestMapping(method=RequestMethod.POST)
-	@ResponseBody
-	public void postMessage(@RequestParam String message) {
+        // Update all chat requests as part of the POST request
+        // See Redis branch for a more sophisticated, non-blocking approach
 
-		this.chatRepository.addMessage(message);
-
-        verticle.getEventBus().publish("test.app", message);
-
-		// Update all chat requests as part of the POST request
-		// See Redis branch for a more sophisticated, non-blocking approach
-
-		for (Entry<DeferredResult<List<String>>, Integer> entry : this.chatRequests.entrySet()) {
-			List<String> messages = this.chatRepository.getMessages(entry.getValue());
-			entry.getKey().setResult(messages);
-		}
-	}
+        for (Entry<DeferredResult<List<String>>, Integer> entry : this.chatRequests.entrySet()) {
+            List<String> messages = this.chatRepository.getMessages(entry.getValue());
+            entry.getKey().setResult(messages);
+        }
+    }
 
 }

@@ -29,6 +29,7 @@ import java.util.List;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.samples.async.data.ChatRepository;
 import org.springframework.test.web.servlet.MockMvc;
 
 public class ChatControllerTests {

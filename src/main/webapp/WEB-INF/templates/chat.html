@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Chat</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link type="text/css" href=""/>
 </head>
 <body>
@@ -25,33 +25,18 @@
 </form>
 
 <div data-bind="visible: activePollingXhr() != null">
-    <textarea id="chatContent" rows="15" cols="60" readonly="readonly"></textarea>
+    <textarea rows="15" cols="60" readonly="readonly" data-bind="text: chatContent"></textarea>
 </div>
 
 <form id="postMessageForm" th:action="@{/mvc/chat}" data-bind="visible: activePollingXhr() != null">
     <p>
-        <input id="message" name="message" type="text" data-bind="value: message"/>
+        <input id="message" name="message" type="text" data-bind="value: message" />
         <button id="post" type="submit" data-bind="click: postMessage">Post</button>
     </p>
 </form>
 </body>
-<script type="text/javascript" src="../../../resources/js/jquery-1.7.2.min.js"
-        th:src="@{/resources/js/jquery-1.7.2.min.js}"></script>
-<script type="text/javascript" src="../../../resources/js/knockout-2.0.0.js"
-        th:src="@{/resources/js/knockout-2.0.0.js}"></script>
-<script type="text/javascript" src="http://cdn.sockjs.org/sockjs-0.2.1.min.js" th:src="@{http://cdn.sockjs.org/sockjs-0.2.1.min.js}"></script>
-<script type="text/javascript" src="../../../resources/js/vertxbus.min.js"
-        th:src="@{/resources/js/vertxbus.min.js}"></script>
+<script type="text/javascript" src="../../../resources/js/jquery-1.7.2.min.js" th:src="@{/resources/js/jquery-1.7.2.min.js}"></script>
+<script type="text/javascript" src="../../../resources/js/knockout-2.0.0.js" th:src="@{/resources/js/knockout-2.0.0.js}"></script>
 <script type="text/javascript" src="../../../resources/js/chat.js" th:src="@{/resources/js/chat.js}"></script>
-<script>
-    var eb = vertx.EventBus("http://localhost:3000/eventbus");
-
-    function browserHandler(msg) {
-        alert(msg.text);
-        $('#chatContent').append(msg.text + "\n");
-    }
-    eb.registerHandler('test.app', browserHandler);
-
-</script>
 
 </html>

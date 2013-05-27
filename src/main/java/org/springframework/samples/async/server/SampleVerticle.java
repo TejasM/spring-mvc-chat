@@ -9,6 +9,7 @@ import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.sockjs.SockJSServer;
+import org.vertx.java.core.sockjs.SockJSSocket;
 
 /**
  * @author Tejas Mehta
@@ -16,8 +17,9 @@ import org.vertx.java.core.sockjs.SockJSServer;
 @Component
 public class SampleVerticle {
 
+    private HttpServer server;
 
-    private EventBus eventBus;
+    private Vertx vertx;
 
     public void setup() {
         Vertx vertx = Vertx.newVertx();
@@ -32,28 +34,17 @@ public class SampleVerticle {
         sockJSServer.bridge(new JsonObject().putString("prefix", "/eventbus"),
                 permitted, permitted);
 
-        EventBus eb = vertx.eventBus();
-
-
-        // Register Handler 1
-        eb.registerLocalHandler("test.app",
-                new Handler<Message>() {
-
-                    @Override
-                    public void handle(Message message) {
-                        System.out.println(("Handler 1 received: "
-                                + message.body.toString()));
-                    }
-
-                });
-
         server.listen(3000);
-        this.eventBus = eb;
+        this.server = server;
+        this.vertx = vertx;
 
     }
 
+    public void onDestroy(){
+        server.close();
+    }
 
-    public EventBus getEventBus() {
-        return eventBus;
+    public Vertx getVertx() {
+        return vertx;
     }
 }

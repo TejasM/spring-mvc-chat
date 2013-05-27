@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.samples.async.chat;
+package org.springframework.samples.async.data;
 
 import java.util.Collections;
 import java.util.List;
