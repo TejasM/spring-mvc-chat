@@ -1,9 +1,9 @@
 spring-mvc-chat: Asynchronous Chat Example using Spring 3.2
 ======================================================
-Author: Rossen Stoyanchev (Tejas Mehta)
+Author: Rossen Stoyanchev/Tejas Mehta
 Level: Intermediate
-Technologies: Spring MVC, Thymeleaf, and Spring Redis
-Summary: Demonstrates the use of JPA 2.0 and JSP in JBoss Enterprise Application Platform 6 or JBoss AS 7.
+Technologies: Spring MVC, Thymeleaf, and Vertx
+Summary: Demonstrates the use of MVC, Thymeleaf and Vertx in JBoss Enterprise Application Platform 6 or JBoss AS 7.
 Target Product: EAP
 Source: <https://github.com/jboss-jdf/jboss-as-quickstart/>
 
@@ -14,12 +14,22 @@ The application this project produces is designed to be run on JBoss Enterprise 
 
 A chat sample using Spring MVC 3.2, Servlet-based, async request processing.
 
-The servlet is configured for async support using: `<async-supported>true</async-supported>` in web.xml.
+The servlet is configured for async support using: `<async-supported>true</async-supported>` in web.xml. For template rendering/resolving, thymeleaf is used.
 
-For template rendering, thymeleaf is used. This application also showcases the SPA (Single Page Application) model. This done using knockout.js for declarative bindings.
+There are two possible profiles that the application runs in, blocking and vertx. As the name suggests the blocking profile, uses a blocking model for the get messages request. It does this using Spring 3.2's DeferredResults class, see `ChatController.java`.
+
+This application also showcases the SPA (Single Page Application) model. This done using knockout.js for declarative bindings.
 The corresponding is defined in `src/webapp/resources/js/chat.js`. The knockout observable chatContent is long polled by the pollForMessages(), which does long HTTP GET request.
 
 In the `ChatController.java` the GET method for "/mvc/chat" mapping, creates a DeferredResult that is stored and activated later whenever a message is posted as a HTTP Post to "/mvc/chat".
+
+In the second profile, vertx, we Spring is combined with Vertx.io(<link>). In `SampleVerticle` beans initalization we create a sockjs server that bridges all messages on the /eventbus prefix and we also set the server to listen to port 3000 on localhost (0.0.0.0, the default).
+
+On the client side in `webapp\WEB-INF\templates\nonblocking\chat.html`, using the vertxbus.js, we connect to the eventbus and register a handler for messages sent to `test.app`, which is where `ChatControllerVertx` sends the recieved messages.
+
+In this way we replace our blocking model with a non-blocking model, resulting in both better performance and a better programming model.
+
+You can switch between the profiles by changing `spring.profiles.active` param-value in `web.xml`.
 
 System requirements
 -------------------
@@ -84,16 +94,3 @@ If you want to debug the source code or look at the Javadocs of any library in t
 
         mvn dependency:sources
         mvn dependency:resolve -Dclassifier=javadoc
-
-### Overview
-
-A chat sample using Spring MVC 3.2, Servlet-based, async request processing. Also see the [redis](https://github.com/rstoyanchev/spring-mvc-chat/tree/redis) branch for a distributed chat. 
-
-### Note
-
-There is a bug in Tomcat that affects this sample. Please, use Tomcat 7.0.32 or higher.
-
-### Instructions
-
-Eclipse users run `mvn eclipse:eclipse` and then import the project. Or just import the code as a Maven project into IntelliJ, NetBeans, or Eclipse.
-
